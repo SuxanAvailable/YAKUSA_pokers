@@ -1,3 +1,4 @@
+### 🎮 [▶ Play the game live](https://ab-test-tycoon.streamlit.app)
 # 🎰 A/B Test Tycoon: App & Casino Designer
 
 An interactive Streamlit game for *Introduction to Data Science (IDSE)*. You are a Product Manager with an impatient CEO; learn hypothesis testing, p-values, statistical power and p-hacking by playing.
