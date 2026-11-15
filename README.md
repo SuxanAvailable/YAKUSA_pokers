@@ -1,3 +1,4 @@
+### 🎮 [▶ Play the game live](https://yakusapokers-k83h5kzo6whmzfptgvtsch.streamlit.app/)
 # 🃏 Yakuza Poker
 
 An interactive Streamlit game for *Introduction to Data Science (IDSE)*. You are a Product Manager with an impatient CEO; learn hypothesis testing, p-values, statistical power and p-hacking by playing.
