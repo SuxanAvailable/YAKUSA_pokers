@@ -1,4 +1,4 @@
-"""A/B Test Tycoon: App & Casino Designer (IDSE mini-project)
+"""Yakuza Poker (IDSE mini-project)
 Learn hypothesis testing, p-values, power and p-hacking by playing.
 All numbers come from live simulation (np.random.binomial) + a two-proportion z-test.
 """
@@ -11,7 +11,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 from scipy import stats
 
-st.set_page_config(page_title="A/B Test Tycoon", page_icon="🎰", layout="wide")
+st.set_page_config(page_title="Yakuza Poker", page_icon="🃏", layout="wide")
 ALPHA = 0.05
 BATCHES = [50, 200, 1000, 5000]
 LEVELS = [
@@ -391,6 +391,85 @@ def missions():
     st.markdown(f'<div class="mis"><b>🎯 MISSION CHECKLIST</b>{rows}</div>', unsafe_allow_html=True)
 
 
+HERO_HTML = """
+<div id="h" style="width:100%;height:270px;border-radius:16px;overflow:hidden;position:relative;background:radial-gradient(ellipse at 50% 0%,#2a1560,#0b0b16 75%);border:1px solid #6c3cff;box-shadow:0 0 22px #6c3cff66">
+<div id="hint" style="position:absolute;left:0;right:0;bottom:8px;text-align:center;color:#ffd84d;font:bold 15px Arial;letter-spacing:.08em;z-index:2;pointer-events:none;animation:bl 1s infinite alternate">touch the disco ball!!!</div></div>
+<style>@keyframes bl{from{opacity:.35}to{opacity:1}}</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+const box=document.getElementById("h"),hint=document.getElementById("hint");
+if(typeof THREE==="undefined"){box.innerHTML="<p style='color:#fff;padding:14px;font-family:Arial'>3D scene needs internet access (three.js).</p>";return;}
+const W=box.clientWidth||700,H=270,asp=W/H;
+const R=new THREE.WebGLRenderer({antialias:true,alpha:true});R.setSize(W,H);R.setPixelRatio(Math.min(2,window.devicePixelRatio||1));box.appendChild(R.domElement);
+const sc=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(40,W/H,0.1,100);const CZ=Math.min(18,Math.max(10,10*2.4/asp*0.75));cam.position.set(0,0.6,CZ);
+sc.add(new THREE.AmbientLight(0xaa99ff,0.8));
+const Lm=new THREE.PointLight(0xff3df0,1.4,40);sc.add(Lm);
+const Lc=new THREE.PointLight(0x35e0ff,1.4,40);sc.add(Lc);
+const Lw=new THREE.PointLight(0xffffff,0.9,40);Lw.position.set(0,4,6);sc.add(Lw);
+function tex(fn,w,h){const c=document.createElement("canvas");c.width=w;c.height=h;fn(c.getContext("2d"),w,h);return new THREE.CanvasTexture(c);}
+const pick=[];
+/* disco ball */
+const ball=new THREE.Group();ball.position.set(0,0.9,0);ball.userData.kind="ball";sc.add(ball);
+const bm=new THREE.MeshStandardMaterial({color:0xdddddd,metalness:1,roughness:0.12,flatShading:true,emissive:0x220033});
+ball.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.25,2),bm));
+const str=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,3,8),new THREE.MeshBasicMaterial({color:0x8a5cff}));str.position.set(0,3.65,0);sc.add(str);
+const spots=new THREE.Group();sc.add(spots);spots.position.copy(ball.position);
+for(let i=0;i<46;i++){const c=new THREE.Color().setHSL(Math.random(),1,0.6);const m=new THREE.Mesh(new THREE.SphereGeometry(0.07,8,8),new THREE.MeshBasicMaterial({color:c}));const a=Math.random()*6.28,b=(Math.random()-0.5)*2.2,r=2.2+Math.random()*3.2;m.position.set(Math.cos(a)*r,b*1.6,Math.sin(a)*r*0.6);spots.add(m);}
+pick.push(ball);
+/* poker chips */
+function chipMats(col,txt){const top=tex(function(g,w,h){g.fillStyle=col;g.fillRect(0,0,w,h);g.strokeStyle="#fff";g.lineWidth=12;g.setLineDash([26,18]);g.beginPath();g.arc(w/2,h/2,w*0.42,0,7);g.stroke();g.setLineDash([]);g.fillStyle="#fff";g.font="bold 70px Arial";g.textAlign="center";g.fillText(txt,w/2,h/2+24);},256,256);
+ const side=new THREE.MeshStandardMaterial({color:col,metalness:0.3,roughness:0.5});
+ return [side,new THREE.MeshStandardMaterial({map:top,metalness:0.3,roughness:0.4}),side];}
+function stack(x,n,txt,cols){const g=new THREE.Group();g.position.set(x,-1.9,0);g.userData={kind:"chips",vy:0,y0:-1.9};
+ for(let i=0;i<n;i++){const col=cols[i%cols.length];const m=new THREE.Mesh(new THREE.CylinderGeometry(0.62,0.62,0.14,40),chipMats(col,i==n-1?txt:"$"));m.position.y=i*0.15;m.rotation.y=Math.random();g.add(m);}
+ sc.add(g);pick.push(g);return g;}
+const cols=["#d92b4b","#2b6fd9","#1fa35c","#222222"];
+const S1=stack(-5.4*Math.min(1,asp/2.4+0.35),8,"p<.05",cols),S2=stack(-3.9*Math.min(1,asp/2.4+0.35),4,"α",cols.slice().reverse());
+/* playing cards */
+function face(txt,col,bg){return tex(function(g,w,h){g.fillStyle=bg;g.fillRect(0,0,w,h);g.strokeStyle=col;g.lineWidth=10;g.strokeRect(10,10,w-20,h-20);g.fillStyle=col;g.textAlign="center";g.font="bold 130px Arial";g.fillText(txt,w/2,h/2+44);},256,360);}
+function card(x,front,back,fc,bc){const g=new THREE.Group();g.position.set(x,0.1,0);g.userData={kind:"card",tgt:0,y0:0.1};
+ const f=new THREE.Mesh(new THREE.PlaneGeometry(1.4,1.96),new THREE.MeshStandardMaterial({map:face(front,fc,"#fff"),roughness:0.5}));f.position.z=0.01;
+ const b=new THREE.Mesh(new THREE.PlaneGeometry(1.4,1.96),new THREE.MeshStandardMaterial({map:face(back,bc,"#201a4a"),roughness:0.5}));b.rotation.y=Math.PI;b.position.z=-0.01;
+ g.add(f);g.add(b);g.rotation.z=x>0?-0.12:0.12;sc.add(g);pick.push(g);return g;}
+const sx=Math.min(1,asp/2.4+0.35);
+const C1=card(3.6*sx,"A♠","H0","#18a8c9","#ffd84d"),C2=card(5.2*sx,"B♥","H1","#e0245e","#ffd84d");
+/* dice */
+function dtex(n){return tex(function(g,w,h){g.fillStyle="#fff";g.fillRect(0,0,w,h);g.fillStyle="#d92b4b";const P={1:[[.5,.5]],2:[[.25,.25],[.75,.75]],3:[[.25,.25],[.5,.5],[.75,.75]],4:[[.25,.25],[.75,.25],[.25,.75],[.75,.75]],5:[[.25,.25],[.75,.25],[.5,.5],[.25,.75],[.75,.75]],6:[[.25,.25],[.75,.25],[.25,.5],[.75,.5],[.25,.75],[.75,.75]]}[n];P.forEach(function(p){g.beginPath();g.arc(p[0]*w,p[1]*h,13,0,7);g.fill();});},128,128);}
+const dm=[1,2,3,4,5,6].map(function(n){return new THREE.MeshStandardMaterial({map:dtex(n),roughness:0.4});});
+const dice=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.9,0.9),dm);dice.position.set(2.2*sx,-1.45,1.4);dice.userData={kind:"dice",vx:0.01,vy:0.012};sc.add(dice);pick.push(dice);
+/* flying coins */
+const coins=[];
+function burst(n){for(let i=0;i<n;i++){const m=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.28,0.06,24),new THREE.MeshStandardMaterial({color:0xffc928,metalness:0.8,roughness:0.25,emissive:0x553300}));m.rotation.x=Math.PI/2;m.position.copy(ball.position);const a=Math.random()*6.28;m.userData={vx:Math.cos(a)*(0.06+Math.random()*0.1),vy:0.12+Math.random()*0.14,vz:Math.sin(a)*0.05,sp:0.1+Math.random()*0.2};sc.add(m);coins.push(m);}}
+/* interaction */
+let party=0,spinV=0.008,touched=false;
+const ray=new THREE.Raycaster(),mv=new THREE.Vector2();
+function hitAt(e){const r=R.domElement.getBoundingClientRect();mv.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(mv,cam);const h=ray.intersectObjects(pick,true);if(!h.length)return null;let o=h[0].object;while(o&&!o.userData.kind)o=o.parent;return o;}
+R.domElement.addEventListener("pointerdown",function(e){const o=hitAt(e);if(!o)return;const k=o.userData.kind;
+ if(k=="ball"){party=1;spinV=0.25;burst(24);hint.textContent="YEAH!!! keep touching! chips, cards and dice react too";touched=true;}
+ else if(k=="chips"){o.userData.vy=0.28;burst(6);}
+ else if(k=="card"){o.userData.tgt+=Math.PI;}
+ else if(k=="dice"){o.userData.vx=0.3+Math.random()*0.3;o.userData.vy=0.3+Math.random()*0.3;}});
+R.domElement.addEventListener("pointermove",function(e){R.domElement.style.cursor=hitAt(e)?"pointer":"default";});
+let t=0;
+function frame(){requestAnimationFrame(frame);t+=0.016;
+ spinV+=(0.008+party*0.07-spinV)*0.06;ball.rotation.y+=spinV;ball.rotation.x=Math.sin(t*0.5)*0.1;spots.rotation.y=ball.rotation.y;
+ party*=0.985;bm.emissive.setHSL((t*0.3)%1,1,0.12+party*0.4);
+ const s=1+party*0.06;ball.scale.set(s,s,s);
+ spots.children.forEach(function(m,i){const k=0.5+0.9*Math.abs(Math.sin(t*(2+party*4)+i));m.scale.set(k,k,k);});
+ Lm.position.set(Math.cos(t)*7,2,Math.sin(t)*4+2);Lc.position.set(Math.cos(t+3)*7,-1,Math.sin(t+3)*4+2);Lm.intensity=1.4+party*2;Lc.intensity=1.4+party*2;
+ [S1,S2].forEach(function(g){const u=g.userData;g.position.y+=u.vy;u.vy-=0.02;if(g.position.y<=u.y0){g.position.y=u.y0;u.vy=Math.abs(u.vy)>0.05?-u.vy*0.35:0;}g.rotation.y+=0.006;});
+ [C1,C2].forEach(function(g,i){g.rotation.y+=(g.userData.tgt-g.rotation.y)*0.12;g.position.y=g.userData.y0+Math.sin(t*1.5+i)*0.12;});
+ dice.rotation.x+=dice.userData.vx;dice.rotation.y+=dice.userData.vy;dice.userData.vx*=0.97;dice.userData.vy*=0.97;if(Math.abs(dice.userData.vx)<0.01)dice.userData.vx=0.01;if(Math.abs(dice.userData.vy)<0.012)dice.userData.vy=0.012;
+ for(let i=coins.length-1;i>=0;i--){const c=coins[i],u=c.userData;c.position.x+=u.vx;c.position.y+=u.vy;c.position.z+=u.vz;u.vy-=0.006;c.rotation.z+=u.sp;if(c.position.y<-4.2){sc.remove(c);coins.splice(i,1);}}
+ cam.position.x=Math.sin(t*0.3)*0.6;cam.lookAt(0,0.2,0);R.render(sc,cam);}
+requestAnimationFrame(frame);
+})();
+</script>
+"""
+
+
 # ---------- tabs ----------
 def final():
     st.header("🏁 Game Over")
@@ -529,7 +608,8 @@ def learn_tab():
 
 
 # ---------- main ----------
-st.markdown('<div class="hero"><h1>A/B TEST TYCOON</h1><p>APP &amp; CASINO DESIGNER</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="hero"><h1>YAKUZA POKER</h1></div>', unsafe_allow_html=True)
+embed(HERO_HTML, 285)
 if ss.show_tut:
     ss.show_tut = False
     tutorial_dialog()
