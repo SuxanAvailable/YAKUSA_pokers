@@ -20,4 +20,5 @@ streamlit run app.py
 ```
 
 ## Author
-Suxan, IIITDM Kancheepuram: IDSE mini-project
+SUJAN RAM S(EC24I2008)
+YASHAS M (EC24I2007)
